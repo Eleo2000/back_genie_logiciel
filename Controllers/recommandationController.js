@@ -1,11 +1,11 @@
 
 const Livre = require('../Models/livreModel');
 const Client = require('../Models/clientModel');
-const Recommandation = require('../Models/recommandationModel');
+/*const Recommandation = require('../Models/recommandationModel');*/
 const mongoose = require('mongoose');
 
 // Fonction pour incrémenter le countClick si la recommandation existe déjà, sinon créer une nouvelle recommandation
-const incrementOrAddRecommandation = async (req, res) => {
+/*const incrementOrAddRecommandation = async (req, res) => {
   try {   
     const {id_client , id_livre , type_livre}= req.body;
 
@@ -71,7 +71,73 @@ const recommanderLivre = async (req, res) => {
     console.error('Une erreur est survenue lors de la récupération du livre avec le plus de clics pour le client :', error.message);
     return null;
   }
+};*/
+
+
+const incrementerNombreDeVues = async (req, res) => {
+  try {
+    const { idLivre, idClient } = req.params;
+
+    // Vérifiez si le livre existe
+    const livre = await Livre.findById(idLivre);
+    if (!livre) {
+      return res.status(404).json({ message: 'Livre non trouvé' });
+    }
+
+    // Vérifiez si le client existe
+    const client = await Client.findById(idClient);
+    if (!client) {
+      return res.status(404).json({ message: 'Client non trouvé' });
+    }
+
+    // Vérifiez si le client a déjà vu ce livre
+    const aDejaVu = livre.vuesParClients.includes(idClient);
+
+    if (!aDejaVu) {
+      // Si le client n'a pas encore vu ce livre, incrémente le nombre de vues
+      livre.nombreDeVues += 1;
+      livre.vuesParClients.push(idClient); // Ajoute l'ID du client à la liste des clients ayant vu ce livre
+      await livre.save();
+    }
+
+    res.status(200).json({ message: 'Nombre de vues incrémenté avec succès' });
+  } catch (error) {
+    console.error('Erreur lors de l\'incrémentation du nombre de vues', error);
+    res.status(500).json({ message: 'Une erreur est survenue lors de l\'incrémentation du nombre de vues' });
+  }
+};
+
+const recommanderLivre = async (req, res) => {
+  try {
+    const { typeLivre, livreChoisiId } = req.params;
+
+    // Récupérez les livres du même type, triés par nombre de vues décroissant
+    const recommandations = await Livre.find({ type: typeLivre, _id: { $ne: livreChoisiId } })
+      .sort({ nombreDeVues: -1 })
+      .limit(5); // Limitez le nombre de recommandations affichées
+
+    res.status(200).json({ recommandations });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des recommandations', error);
+    res.status(500).json({ message: 'Une erreur est survenue lors de la récupération des recommandations' });
+  }
+};
+
+const obtenirLivresPopulaires = async (req, res) => {
+  try {
+    const { idLivre } = req.params;
+
+    // Récupérez les livres du même type, triés par nombre de vues décroissant
+    const livresPopulaires = await Livre.find({ _id:{ $ne: idLivre } })
+      .sort({ nombreDeVues: -1 })
+      .limit(5); // Limitez le nombre de livres populaires affichés
+
+    res.status(200).json({ livresPopulaires });
+  } catch (error) {
+    console.error('Erreur lors de la récupération des livres populaires', error);
+    res.status(500).json({ message: 'Une erreur est survenue lors de la récupération des livres populaires' });
+  }
 };
  
 
-module.exports = { incrementOrAddRecommandation, recommanderLivre };
+module.exports = { incrementerNombreDeVues, recommanderLivre , obtenirLivresPopulaires };

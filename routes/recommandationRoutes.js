@@ -3,11 +3,13 @@ const recommandationController = require('../Controllers/recommandationControlle
 
 const router = express.Router();
 
-// Récupérer tous les clients
-router.post('/recommander', recommandationController.recommanderLivre);
+// Récupérer tous types de livre
+router.get('/recommandations/:typeLivre/:livreChoisiId', recommandationController.recommanderLivre);
 
-// si le type de livre n'existe pas encore, on utilise cette route pour l'inserer
-router.post('/inserer-recommandation', recommandationController.incrementOrAddRecommandation);
+// Route pour incrémenter le nombre de vues d'un livre
+router.post('/incrementer-vues/:idLivre', recommandationController.incrementerNombreDeVues);
+
+router.get('/recommandations/:idLivre', recommandationController.obtenirLivresPopulaires);
 
 
 

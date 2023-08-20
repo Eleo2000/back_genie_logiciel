@@ -8,6 +8,8 @@ const livreSchema = new mongoose.Schema({
   originalname: { type: String, required: true },
   filename: { type: String, required: true },
   filePath: { type: String, required: true },
+  nombreDeVues: { type: Number, default: 0 }, // Champ pour stocker le nombre de vues
+  vuesParClients: [{ type: mongoose.Schema.Types.ObjectId, ref: Client }],
 
 });
 

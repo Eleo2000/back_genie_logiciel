@@ -32,11 +32,11 @@ connect_db_app()
 app.use(express.json())
 
 app.get('/', function (req, res) {
-   return res.send(`Salut grand maitre piera be sy maitre avoko !!! Mandray anao ny port ${PORT}`)
+   return res.send(`Salut grand maitre piera be sy maitre avoko !!! Mandray anao ny port 9000`)
 });
 
 /* start server */
-const server = app.listen(PORT);
+const server = app.listen(9000);
 
 
-console.log(`Server listing on port: ${PORT}`)
+console.log(`Server listing on port: 9000`)
