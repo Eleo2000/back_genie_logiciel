@@ -20,32 +20,29 @@ const mongoose = require('mongoose');
 const uploadLivre = async (req, res) => {
   try {
     if (!req.file) {
-      return res.status(400).json({ message: 'Aucun livre n\'a été envoyé' });
+      return res.status(400).json({ message: "Aucun livre n'a été envoyé" });
     }
-    const { originalname, filename , path} = req.file;
-    const { id_client, titre } = req.body;
+    const { originalname, filename, path } = req.file;
+    const { id_client, titre, type } = req.body;
 
+    
     console.log('eto');
-    // Vérifier à la fois l'existence et la validité de l'id_client
-    const isValidClientId = mongoose.Types.ObjectId.isValid(id_client);
-    const clientExists = await Client.exists({ _id: id_client });
-    if (!isValidClientId || !clientExists) {
-      return res.status(400).json({ message: 'ID client invalide ou non trouvé' });
+    // Vérifier si id_client est un ObjectId valide
+    if (!mongoose.Types.ObjectId.isValid(id_client)) {
+      return res.status(400).json({ message: 'ID client invalide' });
     }
 
-    // si id_client est valid et existe on insere le livre 
+    // Si id_client est valide et existe, on insère le livre
     const livre = new Livre({
       id_client,
       titre,
+      type,
       originalname,
       filename: originalname, // Utilisation de originalname comme nom de fichier
-      filePath: path , // Stockage du chemin d'accès du fichier
-      
+      filePath: path, // Stockage du chemin d'accès du fichier
     });
     await livre.save();
     res.status(200).json({ message: 'Livre uploadé avec succès' });
-
-    
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: 'Une erreur est survenue lors de l\'upload du livre' });
@@ -61,18 +58,17 @@ const updateLivre = async (req, res) => {
     }
     const { id } = req.params;
     const { originalname, filename , path } = req.file;
-    const { id_client, titre } = req.body;
-    const livre = await Livre.findById(id);
+    const { id_client, titre , type} = req.body;
+    const livre = await Livre.findById(id); //pour le path et le suppression de file lors de modification
 
     // Vérifier à la fois l'existence et la validité de l'id_client
     const isValidClientId = mongoose.Types.ObjectId.isValid(id_client);
-    const clientExists = await Client.exists({ _id: id_client });
-    if (!isValidClientId || !clientExists) {
+    if (!isValidClientId) {
       return res.status(400).json({ message: 'ID client invalide ou non trouvé' });
     }else{
       const updatedLivre = await Livre.findByIdAndUpdate(
         id,
-        { id_client, titre , originalname, filename : originalname , filePath: path  }, 
+        { id_client, titre ,type, originalname, filename : originalname , filePath: path  }, 
         { new: true }
       );
   

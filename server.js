@@ -15,10 +15,12 @@ const PORT = process.env.PORT || 8000
 
 const clientRoutes = require('./routes/clientRoutes');
 const livreRoutes= require('./routes/livreRoutes');
+const recommandationRoutes= require('./routes/recommandationRoutes');
 const loginRoutes=require('./routes/loginRoutes');
 
 app.use('/api', clientRoutes);
 app.use('/api', livreRoutes);
+app.use('/api', recommandationRoutes);
 app.use('/api',loginRoutes)
 
 
