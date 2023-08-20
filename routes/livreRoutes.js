@@ -32,7 +32,8 @@ router.delete('/livres/:id', controllerLivre.deleteLivre);
 
 // Route pour obtenir un livre par son ID
 router.get('/livres/:id', controllerLivre.getByIdLivre);
-
+// Route pour chercher un livre par titre
+router.post('/chercheTitreLivre',controllerLivre.chercheTitreLivre);
 //----modif Eleo ----------//
 //route pour la lecture d'un livre selon son ID
 router.get('/livres/:id/telecharger', controllerLivre.lecture);

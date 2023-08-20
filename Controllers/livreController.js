@@ -18,7 +18,9 @@ const mongoose = require('mongoose');
 
 // Méthode pour uploader un livre
 const uploadLivre = async (req, res) => {
+  console.log(req.body);
   try {
+    
     if (!req.file) {
       return res.status(400).json({ message: "Aucun livre n'a été envoyé" });
     }
@@ -219,3 +221,42 @@ const genererResume = async (req, res) => {
 
 
 module.exports = { uploadLivre, updateLivre, getAllLivres, deleteLivre, getByIdLivre, lecture, genererResume };
+
+//fonction pour la recherche à partir de titre et original name
+const chercheTitreLivre =  async(req, res)=> {
+try{
+  const searchQuery = req.body.search;
+
+  if(!searchQuery){
+    res.status(400).json({
+      status : false,
+      message:"Le champ de recherche st vide"
+    });
+    return;
+  }
+
+  const livre = await Livre.find({
+    $or :[
+      {titre:{$regex : req.body.search,$options :'i'}},
+      {originalname:{$regex : req.body.search,$options:'i'}}
+    ] 
+  });
+  if(livre.length > 0){
+    //retourne les resultats 
+  res.status(200).json({livre});
+  }else {
+    res.status(404).json({
+      status : false,
+      message:"Aucun livre trouvé"
+    });
+  }
+  
+}catch(error){
+  res.status(400).json({
+    status:false,
+    message:"Une erreur s'est produite lors de la recherche"
+  })
+}
+} 
+
+module.exports = { uploadLivre, updateLivre, getAllLivres, deleteLivre, getByIdLivre,chercheTitreLivre };
