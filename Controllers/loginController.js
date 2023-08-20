@@ -2,10 +2,13 @@ const Client =require('../Models/clientModel');
 const { generateAccessToken } = require('../Midllewares/token');
 const bcrypt = require('bcrypt');
 
+const saltRounds = 10;
+
 //verification champs
 function verification(req){
     const {username,password}=req.body;
 }
+
 
 const login = async (req,res) => {
     try{
@@ -20,7 +23,7 @@ const login = async (req,res) => {
 
        // Chercher l'utilisateur dans la base 
        const utilisateur = await Client.findOne({ username });
-   
+
        // Vérifier si l'utilisateur existe
        if (!utilisateur) {
          return res.status(404).json({
@@ -28,7 +31,8 @@ const login = async (req,res) => {
            message: "Nom d'utilisateur incorrect.",
          });
        }
-   
+       
+       
        // Vérifier le mot de passe 
        const isPasswordValid = await bcrypt.compare(password, utilisateur.password);
    
@@ -40,10 +44,14 @@ const login = async (req,res) => {
          });
        }
    
-       // Authentification réussie
-       return res.status(200)
-        //retourn token
-        .json(generateAccessToken({ utilisateur: utilisateur.username }));
+       //modif Eleo
+       const userID = utilisateur._id; 
+       console.log(utilisateur);
+       const token = generateAccessToken({utilisateur: utilisateur.username });
+      
+      // Renvoyer le token et l'ID dans la réponse JSON
+      return res.status(200).json({ token, userID });
+       
     
     }
     catch(error){
@@ -53,6 +61,7 @@ const login = async (req,res) => {
 
 
     }
+    
 }
 
 module.exports={login};

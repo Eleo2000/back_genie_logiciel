@@ -2,6 +2,16 @@
 const fs = require('fs-extra');
 const path = require('path');
 
+//modif Eleo
+
+const PDFParser = require("pdf-parse");
+//const natural = require('natural'); // Importez la bibliothèque natural
+const { HfInference } = require('@huggingface/inference');
+
+const hf = new HfInference('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')
+
+
+
 const Livre = require('../Models/livreModel');
 const Client = require('../Models/clientModel');
 const mongoose = require('mongoose');
@@ -15,6 +25,7 @@ const uploadLivre = async (req, res) => {
     const { originalname, filename , path} = req.file;
     const { id_client, titre } = req.body;
 
+    console.log('eto');
     // Vérifier à la fois l'existence et la validité de l'id_client
     const isValidClientId = mongoose.Types.ObjectId.isValid(id_client);
     const clientExists = await Client.exists({ _id: id_client });
@@ -141,4 +152,74 @@ const getByIdLivre = async (req, res) => {
   }
 };
 
-module.exports = { uploadLivre, updateLivre, getAllLivres, deleteLivre, getByIdLivre };
+/***modif Eleo ****/
+const lecture =  async (req, res) => {
+  try {
+    const { id } = req.params;
+    const livre = await Livre.findById(id);
+
+    if (!livre) {
+      return res.status(404).json({ message: 'Livre non trouvé' });
+    }
+
+    const filePath = path.join(__dirname, '../uploads', livre.filename);
+    const fileStream = fs.createReadStream(filePath);
+
+    res.setHeader('Content-Disposition', `inline; filename="${livre.originalname}"`);
+    res.setHeader('Content-Type', 'application/pdf');
+
+    fileStream.pipe(res);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Une erreur est survenue lors de la récupération du livre' });
+  }
+}
+
+//modif Eleo
+const generateSummary = async (content) => {
+  try {
+    const summary = await hf.summarization({
+      model: 'facebook/bart-large-cnn',
+      inputs: content,
+      parameters: {
+        max_length: 100 // Longueur maximale du résumé
+      }
+    });
+    console.log(summary)
+    return summary.summary_text;
+  } catch (error) {
+    console.error('Erreur lors de la génération du résumé :', error);
+    return '';
+  }
+};
+
+const genererResume = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const livre = await Livre.findById(id);
+
+    if (!livre) {
+      return res.status(404).json({ message: 'Livre non trouvé' });
+    }
+
+    const filePath = path.join(__dirname, '../uploads', livre.filename);
+
+    const pdfData = await fs.readFile(filePath);
+    const pdfText = await PDFParser(pdfData);
+
+    const livreContent = pdfText.text; // Contenu extrait du PDF
+
+    // Générer le résumé en utilisant Hugging Face Transformers
+    const summary = await generateSummary(livreContent);
+
+    res.status(200).json({ summary }); // ou quelque chose d'autre selon votre besoin
+    
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: 'Une erreur est survenue lors de la génération du résumé' });
+  }
+};
+
+
+
+module.exports = { uploadLivre, updateLivre, getAllLivres, deleteLivre, getByIdLivre, lecture, genererResume };
